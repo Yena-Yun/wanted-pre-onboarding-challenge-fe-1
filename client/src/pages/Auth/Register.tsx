@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useQueryClient, useMutation } from '@tanstack/react-query';
@@ -12,10 +12,20 @@ const Register = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const [userValue, setUserValue] = useState({
+  const [userValue, setUserValue] = useState<UserProp>({
     email: '',
     password: '',
   });
+
+  const [isValidate, setIsValidate] = useState(false);
+
+  const { email, password } = userValue;
+
+  useEffect(() => {
+    if (email.length < 1 || password.length < 8) return;
+    if (!email.includes('@') || !email.includes('.')) return;
+    setIsValidate(true);
+  }, [email, password.length]);
 
   const { isLoading, mutate } = useMutation({
     mutationFn: (userData: UserProp) =>
@@ -30,21 +40,39 @@ const Register = () => {
     },
   });
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const handleChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const { name, value } = e.target;
 
-    queryClient.setQueryData(['REGISTER_USER'], userValue);
+      if (name === 'email') {
+        setUserValue({ ...userValue, email: value });
+      } else {
+        setUserValue({ ...userValue, password: value });
+      }
+    },
+    [userValue]
+  );
 
-    mutate(userValue, {
-      onSuccess: () => {
-        console.log('회원가입 정보 저장 성공!');
-        navigate('/');
-      },
-      onError: (error) => {
-        console.log(error);
-      },
-    });
-  };
+  const handleSubmit = useCallback(
+    (e: React.FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
+
+      queryClient.setQueryData(['REGISTER_USER'], userValue);
+
+      mutate(userValue, {
+        onSuccess: () => {
+          console.log('회원가입 정보 저장 성공!');
+          navigate('/');
+        },
+        onError: (error) => {
+          console.log(error);
+        },
+      });
+
+      setIsValidate(!isValidate);
+    },
+    [isValidate, mutate, navigate, queryClient, userValue]
+  );
 
   return (
     <Container>
@@ -54,24 +82,22 @@ const Register = () => {
             <Title title='회원가입'></Title>
             <InputWrap>
               <Input
+                name='email'
                 type='email'
                 placeholder='이메일'
                 value={userValue.email}
-                onChange={({ target: { value } }) =>
-                  setUserValue({ ...userValue, email: value })
-                }
+                onChange={handleChange}
               />
               <Input
+                name='password'
                 type='password'
                 placeholder='비밀번호'
                 min='8'
                 value={userValue.password}
-                onChange={({ target: { value } }) =>
-                  setUserValue({ ...userValue, password: value })
-                }
+                onChange={handleChange}
               />
             </InputWrap>
-            <Button>
+            <Button isValidate={isValidate}>
               {isLoading ? (
                 <LoadingSpinner>
                   <div className='spinner'></div>

@@ -1,16 +1,21 @@
 import styled from 'styled-components';
 import { ReactNode } from 'react';
 
-type ButtonProp = {
+interface ButtonProp {
   children: string | ReactNode;
   _onClick?: (e: React.FormEvent<HTMLFormElement>) => void;
+  isValidate?: boolean;
+}
+
+export const Button = ({ children, _onClick, ...rest }: ButtonProp) => {
+  return (
+    <ElButton onClick={() => _onClick} isValidate={rest.isValidate}>
+      {children}
+    </ElButton>
+  );
 };
 
-export const Button = ({ children, _onClick }: ButtonProp) => {
-  return <ElButton onClick={() => _onClick}>{children}</ElButton>;
-};
-
-const ElButton = styled.button`
+const ElButton = styled.button<{ isValidate?: any }>`
   display: flex;
   align-items: center;
   justify-content: center;
@@ -20,7 +25,8 @@ const ElButton = styled.button`
   padding: 12px 24px;
   border-radius: 20px;
   border: 1px solid rgba(0, 0, 0, 0);
-  background-color: rgb(41, 72, 242);
+  background-color: ${({ isValidate }) =>
+    isValidate ? 'rgb(41, 72, 242)' : 'rgba(0, 0, 0, 0.4)'};
   font-weight: 700;
   font-size: 16px;
   line-height: 16px;
@@ -32,5 +38,5 @@ const ElButton = styled.button`
   overflow: hidden;
   transform: translateZ(0px);
   transition: all 0.2s ease 0s;
-  cursor: pointer;
+  cursor: ${({ isValidate }) => (isValidate ? 'pointer' : 'default')};
 `;
