@@ -45,7 +45,6 @@ const Login = () => {
       axios
         .post('http://localhost:8080/users/login', userData)
         .then((res) => {
-          console.log(res.data.token);
           localStorage.setItem('authToken', JSON.stringify(res.data.token));
         })
         .catch((err) => console.log(err)),
