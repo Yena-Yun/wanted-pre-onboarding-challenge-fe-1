@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useQueryClient, useMutation } from '@tanstack/react-query';
@@ -21,23 +21,23 @@ const Register = () => {
 
   const { email, password } = userValue;
 
-  useEffect(() => {
+  const handleValidate = useCallback(() => {
     if (email.length < 1 || password.length < 8) return;
     if (!email.includes('@') || !email.includes('.')) return;
     setIsValidate(true);
   }, [email, password.length]);
 
-  const { isLoading, mutate } = useMutation({
+  useEffect(() => {
+    handleValidate();
+    setIsValidate(false);
+  }, [handleValidate]);
+
+  const { mutate } = useMutation({
     mutationFn: (userData: UserProp) =>
       axios
         .post('http://localhost:8080/users/create', userData)
-        .then((res) => console.log(res)),
-    onSuccess: (data) => {
-      console.log(data);
-    },
-    onError: (error) => {
-      console.log(error);
-    },
+        .then((res) => console.log(res.data.token))
+        .catch((err) => console.log(err)),
   });
 
   const handleChange = useCallback(
@@ -59,19 +59,23 @@ const Register = () => {
 
       queryClient.setQueryData(['REGISTER_USER'], userValue);
 
-      mutate(userValue, {
-        onSuccess: () => {
-          console.log('회원가입 정보 저장 성공!');
-          navigate('/');
-        },
-        onError: (error) => {
-          console.log(error);
-        },
-      });
+      handleValidate();
 
-      setIsValidate(!isValidate);
+      if (isValidate) {
+        mutate(userValue, {
+          onSuccess: () => {
+            console.log('회원가입 정보 저장 성공!');
+            navigate('/');
+          },
+          onError: (error) => {
+            console.log(error);
+          },
+        });
+      }
+
+      setIsValidate(false);
     },
-    [isValidate, mutate, navigate, queryClient, userValue]
+    [isValidate, mutate, navigate, queryClient, userValue, handleValidate]
   );
 
   return (
@@ -97,15 +101,7 @@ const Register = () => {
                 onChange={handleChange}
               />
             </InputWrap>
-            <Button isValidate={isValidate}>
-              {isLoading ? (
-                <LoadingSpinner>
-                  <div className='spinner'></div>
-                </LoadingSpinner>
-              ) : (
-                '회원가입'
-              )}
-            </Button>
+            <Button isValidate={isValidate}>회원가입</Button>
           </FormDiv>
         </FlexBox>
       </SizeBox>
@@ -118,40 +114,6 @@ export default Register;
 const Container = styled(FlexCustom)`
   width: 100%;
   margin-top: 64px;
-`;
-
-const LoadingSpinner = styled.div`
-  display: none;
-  width: 100%;
-  height: 100%;
-  position: absolute;
-  top: 0;
-  left: 0;
-
-  @keyframes spinner {
-    from {
-      transform: rotate(0deg);
-    }
-    to {
-      transform: rotate(360deg);
-    }
-  }
-
-  & > .spinner {
-    box-sizing: border-box;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 64px;
-    height: 64px;
-    margin-top: -32px;
-    margin-left: -32px;
-    border-radius: 50%;
-    border: 8px solid transparent;
-    border-top-color: #f19022;
-    border-bottom-color: #f19022;
-    animation: spinner 0.8s ease infinite;
-  }
 `;
 
 const FormDiv = styled.form`

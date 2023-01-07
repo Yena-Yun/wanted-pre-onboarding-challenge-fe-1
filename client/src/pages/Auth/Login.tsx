@@ -1,10 +1,15 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useQueryClient, useMutation } from '@tanstack/react-query';
 import styled from 'styled-components';
 import { UserProp } from 'types';
-import { FlexBox, FlexCustom, SizeBox } from 'styles/theme';
+import {
+  FlexColumn,
+  FlexColumnCustom,
+  FlexCustom,
+  SizeBox,
+} from 'styles/theme';
 import { Title } from 'components/Title';
 import { Button } from 'components/Button';
 
@@ -17,17 +22,33 @@ const Login = () => {
     password: '',
   });
 
-  const { isLoading, mutate } = useMutation({
+  const [isValidate, setIsValidate] = useState(false);
+
+  const { email, password } = userValue;
+
+  useEffect(() => {
+    if (email.length < 1 || password.length < 8) return;
+    if (!email.includes('@') || !email.includes('.')) return;
+    setIsValidate(true);
+  }, [email, password.length]);
+
+  useEffect(() => {
+    const authToken = localStorage.getItem('authToken');
+
+    if (authToken) {
+      navigate('/');
+    }
+  }, [navigate]);
+
+  const { mutate } = useMutation({
     mutationFn: (userData: UserProp) =>
       axios
         .post('http://localhost:8080/users/login', userData)
-        .then((res) => console.log(res)),
-    onSuccess: (data) => {
-      console.log(data);
-    },
-    onError: (error) => {
-      console.log(error);
-    },
+        .then((res) => {
+          console.log(res.data.token);
+          localStorage.setItem('authToken', JSON.stringify(res.data.token));
+        })
+        .catch((err) => console.log(err)),
   });
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -49,7 +70,7 @@ const Login = () => {
   return (
     <Container>
       <SizeBox width='80%'>
-        <FlexBox gap='32px'>
+        <FlexColumn gap='32px'>
           <FormDiv onSubmit={handleSubmit}>
             <Title title='로그인'></Title>
             <InputWrap>
@@ -71,17 +92,13 @@ const Login = () => {
                 }
               />
             </InputWrap>
-            <Button>
-              {isLoading ? (
-                <LoadingSpinner>
-                  <div className='spinner'></div>
-                </LoadingSpinner>
-              ) : (
-                '로그인'
-              )}
-            </Button>
+            <Button isValidate={isValidate}>로그인</Button>
           </FormDiv>
-        </FlexBox>
+          <FlexColumnCustom>
+            <p>아직 회원이 아니신가요?</p>
+            <Link to='/register'>회원가입</Link>
+          </FlexColumnCustom>
+        </FlexColumn>
       </SizeBox>
     </Container>
   );
@@ -94,40 +111,6 @@ const Container = styled(FlexCustom)`
   margin-top: 64px;
 `;
 
-const LoadingSpinner = styled.div`
-  display: none;
-  width: 100%;
-  height: 100%;
-  position: absolute;
-  top: 0;
-  left: 0;
-
-  @keyframes spinner {
-    from {
-      transform: rotate(0deg);
-    }
-    to {
-      transform: rotate(360deg);
-    }
-  }
-
-  & > .spinner {
-    box-sizing: border-box;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 64px;
-    height: 64px;
-    margin-top: -32px;
-    margin-left: -32px;
-    border-radius: 50%;
-    border: 8px solid transparent;
-    border-top-color: #f19022;
-    border-bottom-color: #f19022;
-    animation: spinner 0.8s ease infinite;
-  }
-`;
-
 const FormDiv = styled.form`
   display: flex;
   flex-direction: column;
@@ -135,8 +118,7 @@ const FormDiv = styled.form`
   align-items: center;
   min-width: 300px;
   max-width: 360px;
-  min-height: 280px;
-  padding: 24px 20px;
+  padding: 20px 24px 0;
   gap: 32px;
 `;
 
