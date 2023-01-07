@@ -17,7 +17,7 @@ const Register = () => {
     password: '',
   });
 
-  const { data, isLoading, mutate } = useMutation({
+  const { isLoading, mutate } = useMutation({
     mutationFn: (userData: UserProp) =>
       axios
         .post('http://localhost:8080/users/create', userData)
@@ -29,8 +29,6 @@ const Register = () => {
       console.log(error);
     },
   });
-
-  // console.log(data!.data);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
