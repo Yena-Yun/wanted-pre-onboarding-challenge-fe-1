@@ -7,10 +7,11 @@ export const AuthAPI = {
       email,
       password,
     });
+
     return data;
   },
 
-  signUp: async ({ email, password }: UserProp): Promise<AuthProp> => {
+  register: async ({ email, password }: UserProp): Promise<AuthProp> => {
     const { data } = await serverAxios.post('/users/create', {
       email,
       password,

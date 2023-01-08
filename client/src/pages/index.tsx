@@ -1,136 +1,128 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import styled from 'styled-components';
 import { authToken } from 'api';
 import { TodoAPI } from 'api/todo';
-import { TodoMutationType, TodoProp } from 'types/todo';
+import { TodoMutateProp, TodoProp } from 'types/todo';
 import * as S from 'styles/theme';
+
+const DefaultAddProp = { title: '', content: '' };
 
 const Todo = () => {
   const navigate = useNavigate();
-  const [addTodo, setAddTodo] = useState({
-    title: '',
-    content: '',
-  });
-  const [isShow, setIsShow] = useState(false);
-
+  const queryClient = useQueryClient();
+  const [isShowAddInput, setIsShowAddInput] = useState(false);
+  const [addTodo, setAddTodo] = useState(DefaultAddProp);
+  const { title, content } = addTodo;
   const titleRef = useRef<HTMLInputElement>(null);
-  const contentRef = useRef<HTMLInputElement>(null);
 
-  const handleLogout = () => {
-    localStorage.removeItem('authToken');
-    navigate('/login');
-  };
-
-  const { data: todoList } = useQuery<{ data: TodoProp[] }, Error>(
+  const { data: todoList } = useQuery<{ data: TodoProp[] }>(
     ['todos', authToken],
     () => TodoAPI.getTodos(authToken),
     {
       onError: (error) => {
         console.log(error);
-        alert('todo 데이터를 가져오는 데 문제가 생겼습니다!');
+        alert('todo 데이터를 가져오는 도중 문제가 생겼습니다!');
         navigate('/');
       },
     }
   );
 
-  const handleAddTodo = () => {
-    setIsShow(!isShow);
-  };
-
-  const handleAddTodoChange = async (
+  const handleAddInputChange = async (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
     const { name, value } = e.target;
 
-    if (name === 'title') {
-      setAddTodo({ ...addTodo, title: value });
-    } else {
-      setAddTodo({ ...addTodo, content: value });
-    }
+    if (name === 'title') setAddTodo({ ...addTodo, title: value });
+    else setAddTodo({ ...addTodo, content: value });
   };
 
-  const queryClient = useQueryClient();
+  const MutationOption = {
+    onSuccess: () => {
+      queryClient.invalidateQueries(['todos', authToken]);
+    },
+    onError: () => {
+      /* Toast 자리 */
+    },
+  };
 
   const { mutateAsync: createMutate } = useMutation<
     { data: TodoProp },
     Error,
-    TodoMutationType
-  >(TodoAPI.createTodo, {
-    onSuccess: () => {
-      queryClient.invalidateQueries(['todos', authToken]);
-    },
-  });
+    TodoMutateProp
+  >(TodoAPI.createTodo, MutationOption);
 
-  const handleAddTodoSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const { mutateAsync: deleteMutate } = useMutation(
+    TodoAPI.deleteTodo,
+    MutationOption
+  );
+
+  const handleTodoSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    const resultTodo = {
-      title: titleRef.current!.value,
-      content: contentRef.current!.value,
-    };
-
     try {
-      await createMutate({
-        title: resultTodo.title,
-        content: resultTodo.content,
-        authToken: authToken,
-      });
+      await createMutate({ title, content, authToken });
     } catch (err) {
-      console.log(err);
+      /* Toast 자리 */
     }
 
-    setAddTodo({
-      title: '',
-      content: '',
-    });
-
-    setIsShow(false);
+    setAddTodo(DefaultAddProp);
+    setIsShowAddInput(false);
   };
-
-  const { mutateAsync: deleteMutate } = useMutation(TodoAPI.deleteTodo, {
-    onSuccess: () => {
-      queryClient.invalidateQueries(['todos', authToken]);
-    },
-  });
 
   const handleTodoDelete = async (id: string) => {
     try {
       await deleteMutate(id);
     } catch (err) {
-      console.log(err);
+      /* Toast 자리 */
     }
   };
+
+  const logout = () => {
+    localStorage.removeItem('authToken');
+    navigate('/login');
+  };
+
+  useEffect(() => {
+    if (isShowAddInput) {
+      titleRef.current!.focus();
+    }
+  }, [isShowAddInput]);
 
   return (
     <>
       <h1>Todo 앱</h1>
-      {authToken ? (
-        <LogoutButton onClick={handleLogout}>로그아웃</LogoutButton>
+      {todoList || authToken ? (
+        <LogoutButton onClick={logout}>로그아웃</LogoutButton>
       ) : (
         <Link to='/login'>로그인</Link>
       )}
       <Container>
-        <AddTodoButton onClick={handleAddTodo}>Todo 추가</AddTodoButton>
-        <AddTodoInputGroup onSubmit={handleAddTodoSubmit} show={isShow}>
+        <AddTodoButton
+          onClick={() => {
+            setIsShowAddInput(!isShowAddInput);
+          }}
+        >
+          Todo 추가
+        </AddTodoButton>
+        <AddInputGroup onSubmit={handleTodoSubmit} isShow={isShowAddInput}>
           <AddInput
             ref={titleRef}
             name='title'
-            value={addTodo.title}
+            value={title}
             placeholder='할 일 제목'
-            onChange={handleAddTodoChange}
+            onChange={handleAddInputChange}
           />
           <AddInput
-            ref={contentRef}
             name='content'
-            value={addTodo.content}
+            value={content}
             placeholder='할 일 내용'
-            onChange={handleAddTodoChange}
+            onChange={handleAddInputChange}
           />
           <AddTodoButton>추가</AddTodoButton>
-        </AddTodoInputGroup>
-        {todoList?.data.length! === 0 && !isShow ? (
+        </AddInputGroup>
+        {todoList?.data.length === 0 && !isShowAddInput ? (
           <div>Todo가 없습니다!</div>
         ) : (
           todoList?.data.map(
@@ -160,10 +152,6 @@ const Todo = () => {
   );
 };
 
-const LogoutButton = styled.button`
-  cursor: pointer;
-`;
-
 const Container = styled.div`
   max-width: 450px;
   padding: 24px 20px;
@@ -180,25 +168,24 @@ const AddTodoButton = styled.button`
   cursor: pointer;
 `;
 
-const AddInput = styled.input`
-  flex: 1 1 0%;
-  position: relative;
-  width: 100%;
-  padding: 12px 20px;
-  margin-top: 12px;
-  border-radius: 12px;
-  box-shadow: rgb(0 0 0 / 12%) 0px 0px 0px 1px inset;
-  background-color: rgb(255, 255, 255);
-  color: rgba(0, 0, 0, 0.7);
-  box-sizing: border-box;
-  cursor: text;
-  transition: all 0.1s ease 0s;
-`;
-
-const AddTodoInputGroup = styled.form<{ show: boolean }>`
-  display: ${(props) => (props.show ? 'flex' : 'none')};
+const AddInputGroup = styled.form<{ isShow: boolean }>`
+  display: ${({ isShow }) => (isShow ? 'flex' : 'none')};
   flex-direction: column;
   margin-bottom: 24px;
+`;
+
+const AddInput = styled.input`
+  position: relative;
+  flex: 1 1 0%;
+  width: 100%;
+  padding: 12px 20px;
+  margin-bottom: 12px;
+  color: rgba(0, 0, 0, 0.7);
+  border-radius: 12px;
+  background-color: rgb(255, 255, 255);
+  box-shadow: rgb(0 0 0 / 12%) 0px 0px 0px 1px inset;
+  transition: all 0.1s ease 0s;
+  cursor: text;
 `;
 
 const TodoItem = styled.div`
@@ -218,14 +205,18 @@ const TodoDeleteButton = styled.button`
 `;
 
 const Title = styled.div`
-  font-weight: 500;
   margin-bottom: 5px;
+  font-weight: 500;
 `;
 
 const Description = styled.div`
+  margin-bottom: 11px;
   font-size: 14px;
   color: rgba(0, 0, 0, 0.8);
-  margin-bottom: 11px;
+`;
+
+const LogoutButton = styled.button`
+  cursor: pointer;
 `;
 
 export default Todo;

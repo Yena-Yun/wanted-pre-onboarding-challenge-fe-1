@@ -4,9 +4,9 @@ import { useQueryClient, useMutation } from '@tanstack/react-query';
 import styled from 'styled-components';
 import { Title } from 'components/Title';
 import { Button } from 'components/Button';
-import { serverAxios } from 'api';
 import { UserProp } from 'types/auth';
 import * as S from 'styles/theme';
+import { AuthAPI } from 'api/auth';
 
 const Register = () => {
   const navigate = useNavigate();
@@ -29,15 +29,15 @@ const Register = () => {
 
   useEffect(() => {
     handleValidate();
-    // setIsValidate(false);
   }, [handleValidate]);
 
-  const { mutate } = useMutation({
-    mutationFn: (userData: UserProp) =>
-      serverAxios
-        .post('/users/create', userData)
-        .then((res) => console.log(res.data.token))
-        .catch((err) => console.log(err)),
+  const { mutate } = useMutation(AuthAPI.register, {
+    onSuccess: () => {
+      navigate('/login');
+    },
+    onError: (error) => {
+      console.log(error);
+    },
   });
 
   const handleChange = useCallback(

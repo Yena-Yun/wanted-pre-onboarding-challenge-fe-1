@@ -7,6 +7,7 @@ import { Button } from 'components/Button';
 import { authToken, serverAxios } from 'api';
 import { UserProp } from 'types/auth';
 import * as S from 'styles/theme';
+import { AuthAPI } from 'api/auth';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -25,19 +26,14 @@ const Login = () => {
     setIsValidate(true);
   }, [email, password.length]);
 
-  // useEffect(() => {
-  //   if (authToken) navigate('/');
-  // }, [navigate]);
-
-  const { mutate } = useMutation({
-    mutationFn: (userData: UserProp) =>
-      serverAxios
-        .post('/users/login', userData)
-        .then((res) => {
-          localStorage.setItem('authToken', JSON.stringify(res.data.token));
-          navigate('/');
-        })
-        .catch((err) => console.log(err)),
+  const { mutate } = useMutation(AuthAPI.login, {
+    onSuccess: (data) => {
+      localStorage.setItem('authToken', JSON.stringify(data.token));
+      navigate('/');
+    },
+    onError: (error) => {
+      console.log(error);
+    },
   });
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {

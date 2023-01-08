@@ -1,5 +1,5 @@
 import { serverAxios } from 'api';
-import { TodoMutationType, TodoProp } from 'types/todo';
+import { TodoMutateProp, TodoProp } from 'types/todo';
 
 let token = localStorage.getItem('authToken') || '';
 
@@ -26,7 +26,7 @@ export const TodoAPI = {
     title,
     content,
     authToken,
-  }: TodoMutationType): Promise<{ data: TodoProp }> => {
+  }: TodoMutateProp): Promise<{ data: TodoProp }> => {
     const { data } = await serverAxios.post(
       '/todos',
       { title, content },
