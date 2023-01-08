@@ -1,5 +1,5 @@
 import { serverAxios } from 'api';
-import { AuthProp, UserProp } from 'types';
+import { AuthProp, UserProp } from 'types/auth';
 
 export const AuthAPI = {
   login: async ({ email, password }: UserProp): Promise<AuthProp> => {
@@ -18,3 +18,13 @@ export const AuthAPI = {
     return data;
   },
 };
+
+// export const AuthAPI = (endPointName: string) => {
+//   return async ({ email, password }: UserProp): Promise<AuthProp> => {
+//     const { data } = await serverAxios.post(`/users/${endPointName}`, {
+//       email,
+//       password,
+//     });
+//     return data;
+//   };
+// };

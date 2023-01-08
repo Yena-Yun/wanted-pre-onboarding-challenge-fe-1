@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import { useQueryClient, useMutation } from '@tanstack/react-query';
 import styled from 'styled-components';
-import { UserProp } from 'types';
-import { FlexBox, FlexCustom, SizeBox } from 'styles/theme';
 import { Title } from 'components/Title';
 import { Button } from 'components/Button';
+import { serverAxios } from 'api';
+import { UserProp } from 'types/auth';
+import * as S from 'styles/theme';
 
 const Register = () => {
   const navigate = useNavigate();
@@ -29,13 +29,13 @@ const Register = () => {
 
   useEffect(() => {
     handleValidate();
-    setIsValidate(false);
+    // setIsValidate(false);
   }, [handleValidate]);
 
   const { mutate } = useMutation({
     mutationFn: (userData: UserProp) =>
-      axios
-        .post('http://localhost:8080/users/create', userData)
+      serverAxios
+        .post('/users/create', userData)
         .then((res) => console.log(res.data.token))
         .catch((err) => console.log(err)),
   });
@@ -65,7 +65,7 @@ const Register = () => {
         mutate(userValue, {
           onSuccess: () => {
             console.log('회원가입 정보 저장 성공!');
-            navigate('/');
+            navigate('/login');
           },
           onError: (error) => {
             console.log(error);
@@ -80,8 +80,8 @@ const Register = () => {
 
   return (
     <Container>
-      <SizeBox width='80%'>
-        <FlexBox gap='32px'>
+      <S.SizeBox width='80%'>
+        <S.FlexBox gap='32px'>
           <FormDiv onSubmit={handleSubmit}>
             <Title title='회원가입'></Title>
             <InputWrap>
@@ -103,15 +103,15 @@ const Register = () => {
             </InputWrap>
             <Button isValidate={isValidate}>회원가입</Button>
           </FormDiv>
-        </FlexBox>
-      </SizeBox>
+        </S.FlexBox>
+      </S.SizeBox>
     </Container>
   );
 };
 
 export default Register;
 
-const Container = styled(FlexCustom)`
+const Container = styled(S.FlexCustom)`
   width: 100%;
   margin-top: 64px;
 `;

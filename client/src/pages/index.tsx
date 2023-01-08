@@ -1,46 +1,36 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { TodoAPI, TodoMutationType, TodoProp } from 'api/todo';
-import { useEffect, useRef, useState } from 'react';
+import { useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import styled from 'styled-components';
-import { FlexColumn, FlexCustom } from 'styles/theme';
+import { authToken } from 'api';
+import { TodoAPI } from 'api/todo';
+import { TodoMutationType, TodoProp } from 'types/todo';
+import * as S from 'styles/theme';
 
 const Todo = () => {
   const navigate = useNavigate();
-  const [token, setToken] = useState('');
   const [addTodo, setAddTodo] = useState({
     title: '',
     content: '',
   });
   const [isShow, setIsShow] = useState(false);
+
   const titleRef = useRef<HTMLInputElement>(null);
   const contentRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    const authToken = localStorage.getItem('authToken');
-    setToken(authToken!);
-
-    if (!authToken) {
-      alert('환영합니다! 로그인을 해주세요.');
-      navigate('/login');
-    }
-  }, [navigate, token]);
-
   const handleLogout = () => {
-    alert('또 만나요!');
     localStorage.removeItem('authToken');
     navigate('/login');
   };
 
   const { data: todoList } = useQuery<{ data: TodoProp[] }, Error>(
-    ['todos', token],
-    () => TodoAPI.getTodos(token).then((res) => res),
+    ['todos', authToken],
+    () => TodoAPI.getTodos(authToken),
     {
-      onSuccess: ({ data }) => {
-        console.log(data);
-      },
       onError: (error) => {
         console.log(error);
+        alert('todo 데이터를 가져오는 데 문제가 생겼습니다!');
+        navigate('/');
       },
     }
   );
@@ -69,7 +59,7 @@ const Todo = () => {
     TodoMutationType
   >(TodoAPI.createTodo, {
     onSuccess: () => {
-      queryClient.invalidateQueries(['todos', token]);
+      queryClient.invalidateQueries(['todos', authToken]);
     },
   });
 
@@ -85,7 +75,7 @@ const Todo = () => {
       await createMutate({
         title: resultTodo.title,
         content: resultTodo.content,
-        authToken: token,
+        authToken: authToken,
       });
     } catch (err) {
       console.log(err);
@@ -101,7 +91,7 @@ const Todo = () => {
 
   const { mutateAsync: deleteMutate } = useMutation(TodoAPI.deleteTodo, {
     onSuccess: () => {
-      queryClient.invalidateQueries(['todos', token]);
+      queryClient.invalidateQueries(['todos', authToken]);
     },
   });
 
@@ -116,7 +106,7 @@ const Todo = () => {
   return (
     <>
       <h1>Todo 앱</h1>
-      {token ? (
+      {authToken ? (
         <LogoutButton onClick={handleLogout}>로그아웃</LogoutButton>
       ) : (
         <Link to='/login'>로그인</Link>
@@ -140,30 +130,30 @@ const Todo = () => {
           />
           <AddTodoButton>추가</AddTodoButton>
         </AddTodoInputGroup>
-        {todoList?.data.length! > 0 ? (
+        {todoList?.data.length! === 0 && !isShow ? (
+          <div>Todo가 없습니다!</div>
+        ) : (
           todoList?.data.map(
             ({
               id,
               title,
               content,
             }: Pick<TodoProp, 'id' | 'title' | 'content'>) => (
-              <FlexCustom key={id}>
+              <S.FlexCustom key={id}>
                 <TodoItem>
-                  <FlexColumn>
-                    <FlexCustom justify='space-between'>
+                  <S.FlexColumn>
+                    <S.FlexCustom justify='space-between'>
                       <Title>{title}</Title>
-                    </FlexCustom>
+                    </S.FlexCustom>
                     <Description>{content}</Description>
-                  </FlexColumn>
+                  </S.FlexColumn>
                 </TodoItem>
                 <TodoDeleteButton onClick={() => handleTodoDelete(id)}>
                   ❌
                 </TodoDeleteButton>
-              </FlexCustom>
+              </S.FlexCustom>
             )
           )
-        ) : (
-          <div>Todo가 없습니다!</div>
         )}
       </Container>
     </>
@@ -230,39 +220,6 @@ const TodoDeleteButton = styled.button`
 const Title = styled.div`
   font-weight: 500;
   margin-bottom: 5px;
-`;
-
-const StatusBadge = styled.div`
-  padding: 6px 8px;
-  margin-right: 8px;
-
-  font-size: 12px;
-  color: #993399;
-
-  background-color: rgba(124, 129, 252, 0.1);
-  border-radius: 8px;
-  cursor: default;
-
-  &:nth-child(2n) {
-    color: #5ced73;
-    background-color: #f4faf0;
-  }
-`;
-
-const DueDate = styled.div`
-  margin-bottom: 1rem;
-
-  span {
-    margin-right: 4px;
-    font-size: 15px;
-    font-weight: 500;
-    color: #993399;
-  }
-
-  p {
-    font-size: 14px;
-    color: rgba(0, 0, 0, 0.4);
-  }
 `;
 
 const Description = styled.div`

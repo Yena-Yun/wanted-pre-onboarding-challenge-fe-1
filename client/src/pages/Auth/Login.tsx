@@ -1,27 +1,20 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import { useQueryClient, useMutation } from '@tanstack/react-query';
 import styled from 'styled-components';
-import { UserProp } from 'types';
-import {
-  FlexColumn,
-  FlexColumnCustom,
-  FlexCustom,
-  SizeBox,
-} from 'styles/theme';
 import { Title } from 'components/Title';
 import { Button } from 'components/Button';
+import { authToken, serverAxios } from 'api';
+import { UserProp } from 'types/auth';
+import * as S from 'styles/theme';
 
 const Login = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-
   const [userValue, setUserValue] = useState({
     email: '',
     password: '',
   });
-
   const [isValidate, setIsValidate] = useState(false);
 
   const { email, password } = userValue;
@@ -32,20 +25,17 @@ const Login = () => {
     setIsValidate(true);
   }, [email, password.length]);
 
-  useEffect(() => {
-    const authToken = localStorage.getItem('authToken');
-
-    if (authToken) {
-      navigate('/');
-    }
-  }, [navigate]);
+  // useEffect(() => {
+  //   if (authToken) navigate('/');
+  // }, [navigate]);
 
   const { mutate } = useMutation({
     mutationFn: (userData: UserProp) =>
-      axios
-        .post('http://localhost:8080/users/login', userData)
+      serverAxios
+        .post('/users/login', userData)
         .then((res) => {
           localStorage.setItem('authToken', JSON.stringify(res.data.token));
+          navigate('/');
         })
         .catch((err) => console.log(err)),
   });
@@ -68,8 +58,8 @@ const Login = () => {
 
   return (
     <Container>
-      <SizeBox width='80%'>
-        <FlexColumn gap='32px'>
+      <S.SizeBox width='80%'>
+        <S.FlexColumn gap='32px'>
           <FormDiv onSubmit={handleSubmit}>
             <Title title='로그인'></Title>
             <InputWrap>
@@ -93,19 +83,19 @@ const Login = () => {
             </InputWrap>
             <Button isValidate={isValidate}>로그인</Button>
           </FormDiv>
-          <FlexColumnCustom>
+          <S.FlexColumnCustom>
             <p>아직 회원이 아니신가요?</p>
             <Link to='/register'>회원가입</Link>
-          </FlexColumnCustom>
-        </FlexColumn>
-      </SizeBox>
+          </S.FlexColumnCustom>
+        </S.FlexColumn>
+      </S.SizeBox>
     </Container>
   );
 };
 
 export default Login;
 
-const Container = styled(FlexCustom)`
+const Container = styled(S.FlexCustom)`
   width: 100%;
   margin-top: 64px;
 `;
