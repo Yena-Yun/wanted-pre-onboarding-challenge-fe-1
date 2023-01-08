@@ -1,31 +1,29 @@
-import { QueryClient, useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { TodoAPI, TodoMutationType, TodoProp } from 'api/todo';
-import axios from 'axios';
-import { Button } from 'components/Button';
 import { v4 as uuidv4 } from 'uuid';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { FlexColumn, FlexCustom } from 'styles/theme';
-import { toEditorSettings } from 'typescript';
 
 const Todo = () => {
   const navigate = useNavigate();
   const [token, setToken] = useState('');
-  const [todos, setTodos] = useState<TodoProp[]>([]);
   const [addTodo, setAddTodo] = useState({
     title: '',
     content: '',
   });
   const [isShow, setIsShow] = useState(false);
+  const titleRef = useRef<HTMLInputElement>(null);
+  const contentRef = useRef<HTMLInputElement>(null);
 
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: {
-        staleTime: Infinity,
-      },
-    },
-  });
+  // const queryClient = new QueryClient({
+  //   // defaultOptions: {
+  //   //   queries: {
+  //   //     staleTime: Infinity,
+  //   //   },
+  //   // },
+  // });
 
   useEffect(() => {
     const authToken = localStorage.getItem('authToken');
@@ -37,15 +35,12 @@ const Todo = () => {
     }
   }, [navigate, token]);
 
-  // const data = queryClient.getQueryData(['todos']);
-
-  const { data } = useQuery<{ data: TodoProp[] }, Error>(
+  const { data: todoList } = useQuery<{ data: TodoProp[] }, Error>(
     ['todos', token],
-    () => TodoAPI.getTodos(token),
+    () => TodoAPI.getTodos(token).then((res) => res),
     {
       onSuccess: ({ data }) => {
         console.log(data);
-        setTodos(data);
       },
       onError: (error) => {
         console.log(error);
@@ -53,14 +48,16 @@ const Todo = () => {
     }
   );
 
-  const { data: createData, mutate } = useMutation<
+  const queryClient = useQueryClient();
+
+  const { data: createData, mutateAsync: createMutate } = useMutation<
     { data: TodoProp },
     Error,
     TodoMutationType
   >(TodoAPI.createTodo, {
     onSuccess: ({ data }) => {
+      queryClient.invalidateQueries(['todos', token]);
       console.log(createData);
-      setTodos([...todos, { ...data }]);
     },
   });
 
@@ -74,7 +71,9 @@ const Todo = () => {
     setIsShow(!isShow);
   };
 
-  const handleAddTodoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAddTodoChange = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const { name, value } = e.target;
 
     if (name === 'title') {
@@ -84,22 +83,23 @@ const Todo = () => {
     }
   };
 
-  const handleAddTodoSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleAddTodoSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    mutate(
-      { title: addTodo.title, content: addTodo.content, authToken: token },
-      {
-        onSuccess: () => {
-          console.log('Todo 생성 성공!');
-          // console.log(createData);
-          // setTodos([...todos, createData!.data]);
-        },
-        onError: (error) => {
-          console.log(error);
-        },
-      }
-    );
+    const resultTodo = {
+      title: titleRef.current!.value,
+      content: contentRef.current!.value,
+    };
+
+    try {
+      await createMutate({
+        title: resultTodo.title,
+        content: resultTodo.content,
+        authToken: token,
+      });
+    } catch (err) {
+      console.log(err);
+    }
 
     setAddTodo({
       title: '',
@@ -108,8 +108,19 @@ const Todo = () => {
     setIsShow(false);
   };
 
+  const { mutate: deleteMutate } = useMutation(TodoAPI.deleteTodo);
+
+  const handleTodoDelete = (id: string) => {
+    deleteMutate(id, {
+      onSuccess: (data) => {
+        console.log('삭제 성공');
+        console.log(data);
+      },
+    });
+  };
+
   return (
-    <div>
+    <>
       <h1>Todo 앱</h1>
       {token ? (
         <LogoutButton onClick={handleLogout}>로그아웃</LogoutButton>
@@ -120,12 +131,14 @@ const Todo = () => {
         <AddTodoButton onClick={handleAddTodo}>Todo 추가</AddTodoButton>
         <AddTodoInputGroup onSubmit={handleAddTodoSubmit} show={isShow}>
           <AddInput
+            ref={titleRef}
             name='title'
             value={addTodo.title}
             placeholder='할 일 제목'
             onChange={handleAddTodoChange}
           />
           <AddInput
+            ref={contentRef}
             name='content'
             value={addTodo.content}
             placeholder='할 일 내용'
@@ -133,20 +146,35 @@ const Todo = () => {
           />
           <AddTodoButton>추가</AddTodoButton>
         </AddTodoInputGroup>
-        {todos?.map(
-          ({ title, content }: Pick<TodoMutationType, 'title' | 'content'>) => (
-            <TodoItem key={uuidv4()}>
-              <FlexColumn>
-                <FlexCustom justify='space-between'>
-                  <Title>{title}</Title>
-                </FlexCustom>
-                <Description>{content}</Description>
-              </FlexColumn>
-            </TodoItem>
+        {todoList ? (
+          todoList?.data.map(
+            ({
+              id,
+              title,
+              content,
+              createdAt,
+            }: Pick<TodoProp, 'id' | 'title' | 'content' | 'createdAt'>) => (
+              // id
+              <FlexCustom key={id}>
+                <TodoItem>
+                  <FlexColumn>
+                    <FlexCustom justify='space-between'>
+                      <Title>{title}</Title>
+                    </FlexCustom>
+                    <Description>{content}</Description>
+                  </FlexColumn>
+                </TodoItem>
+                <TodoDeleteButton onClick={() => handleTodoDelete(id)}>
+                  ❌
+                </TodoDeleteButton>
+              </FlexCustom>
+            )
           )
+        ) : (
+          <div>Todo가 없습니다!</div>
         )}
       </Container>
-    </div>
+    </>
   );
 };
 
@@ -194,6 +222,14 @@ const AddTodoInputGroup = styled.form<{ show: boolean }>`
 const TodoItem = styled.div`
   width: 390px;
   padding: 17px 0 19px 24px;
+  border: 1px solid rgba(0, 0, 0, 0.4);
+  border-radius: 14px;
+  cursor: pointer;
+`;
+
+const TodoDeleteButton = styled.button`
+  width: 70px;
+  height: 40px;
   border: 1px solid rgba(0, 0, 0, 0.4);
   border-radius: 14px;
   cursor: pointer;

@@ -14,7 +14,7 @@ export type TodoMutationType = {
   authToken: string;
 };
 
-let token = localStorage.getItem('authToken');
+let token = localStorage.getItem('authToken') || '';
 
 export const TodoAPI = {
   getTodos: async (authToken: string): Promise<{ data: TodoProp[] }> => {
