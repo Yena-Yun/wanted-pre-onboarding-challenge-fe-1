@@ -1,30 +1,28 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQueryClient, useMutation } from '@tanstack/react-query';
 import styled from 'styled-components';
 import { Title } from 'components/Title';
 import { Button } from 'components/Button';
-import { authToken, serverAxios } from 'api';
-import { UserProp } from 'types/auth';
 import * as S from 'styles/theme';
 import { AuthAPI } from 'api/auth';
 
 const Login = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [userValue, setUserValue] = useState({
-    email: '',
-    password: '',
-  });
   const [isValidate, setIsValidate] = useState(false);
+  const [userInput, setUserInput] = useState({ email: '', password: '' });
+  const { email, password } = userInput;
 
-  const { email, password } = userValue;
-
-  useEffect(() => {
+  const handleValidate = useCallback(() => {
     if (email.length < 1 || password.length < 8) return;
     if (!email.includes('@') || !email.includes('.')) return;
     setIsValidate(true);
   }, [email, password.length]);
+
+  useEffect(() => {
+    handleValidate();
+  }, [handleValidate]);
 
   const { mutate } = useMutation(AuthAPI.login, {
     onSuccess: (data) => {
@@ -36,21 +34,41 @@ const Login = () => {
     },
   });
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const handleChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const { name, value } = e.target;
 
-    queryClient.setQueryData(['LOGIN_USER'], userValue);
+      if (name === 'email') {
+        setUserInput({ ...userInput, email: value });
+      } else {
+        setUserInput({ ...userInput, password: value });
+      }
+    },
+    [userInput]
+  );
 
-    mutate(userValue, {
-      onSuccess: () => {
-        console.log('로그인 성공!');
-        navigate('/');
-      },
-      onError: (error) => {
-        console.log(error);
-      },
-    });
-  };
+  const handleSubmit = useCallback(
+    (e: React.FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
+
+      queryClient.setQueryData(['LOGIN_USER'], userInput);
+
+      if (isValidate) {
+        mutate(userInput, {
+          onSuccess: () => {
+            console.log('로그인 성공!');
+            navigate('/');
+          },
+          onError: (error) => {
+            console.log(error);
+          },
+        });
+      }
+
+      setIsValidate(false);
+    },
+    [isValidate, mutate, navigate, queryClient, userInput]
+  );
 
   return (
     <Container>
@@ -60,21 +78,19 @@ const Login = () => {
             <Title title='로그인'></Title>
             <InputWrap>
               <Input
+                name='email'
                 type='email'
                 placeholder='이메일'
-                value={userValue.email}
-                onChange={({ target: { value } }) =>
-                  setUserValue({ ...userValue, email: value })
-                }
+                value={email}
+                onChange={handleChange}
               />
               <Input
+                name='password'
                 type='password'
                 placeholder='비밀번호'
                 min='8'
-                value={userValue.password}
-                onChange={({ target: { value } }) =>
-                  setUserValue({ ...userValue, password: value })
-                }
+                value={password}
+                onChange={handleChange}
               />
             </InputWrap>
             <Button isValidate={isValidate}>로그인</Button>

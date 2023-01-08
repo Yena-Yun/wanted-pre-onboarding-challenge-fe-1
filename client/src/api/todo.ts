@@ -1,10 +1,8 @@
-import { serverAxios } from 'api';
-import { TodoMutateProp, TodoProp } from 'types/todo';
-
-let token = localStorage.getItem('authToken') || '';
+import { authToken, serverAxios } from 'api';
+import { TodoProp } from 'types/todo';
 
 export const TodoAPI = {
-  getTodos: async (authToken: string): Promise<{ data: TodoProp[] }> => {
+  getTodos: async () => {
     const { data } = await serverAxios.get<{ data: TodoProp[] }>('/todos', {
       headers: {
         Authorization: `Bearer ${authToken}`,
@@ -16,7 +14,7 @@ export const TodoAPI = {
   getTodoById: async (id: string): Promise<TodoProp> => {
     const { data } = await serverAxios.get(`/todos/${id}`, {
       headers: {
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${authToken}`,
       },
     });
 
@@ -25,8 +23,7 @@ export const TodoAPI = {
   createTodo: async ({
     title,
     content,
-    authToken,
-  }: TodoMutateProp): Promise<{ data: TodoProp }> => {
+  }: Pick<TodoProp, 'title' | 'content'>) => {
     const { data } = await serverAxios.post(
       '/todos',
       { title, content },
@@ -37,12 +34,12 @@ export const TodoAPI = {
       }
     );
 
-    return data.data;
+    return data;
   },
   updateTodo: async (todo: TodoProp, id: string): Promise<TodoProp> => {
     const { data } = await serverAxios.put(`/todos/${id}`, todo, {
       headers: {
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${authToken}`,
       },
     });
 
@@ -51,7 +48,7 @@ export const TodoAPI = {
   deleteTodo: async (id: string) => {
     const { data } = await serverAxios.delete(`/todos/${id}`, {
       headers: {
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${authToken}`,
       },
     });
 

@@ -5,9 +5,3 @@ export type TodoProp = {
   createdAt: string;
   updatedAt: string;
 };
-
-export type TodoMutateProp = {
-  title: string;
-  content: string;
-  authToken: string;
-};

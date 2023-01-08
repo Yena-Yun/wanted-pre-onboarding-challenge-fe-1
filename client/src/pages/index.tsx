@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import styled from 'styled-components';
 import { authToken } from 'api';
 import { TodoAPI } from 'api/todo';
-import { TodoMutateProp, TodoProp } from 'types/todo';
+import { TodoProp } from 'types/todo';
 import * as S from 'styles/theme';
 
 const DefaultAddProp = { title: '', content: '' };
@@ -18,8 +18,8 @@ const Todo = () => {
   const titleRef = useRef<HTMLInputElement>(null);
 
   const { data: todoList } = useQuery<{ data: TodoProp[] }>(
-    ['todos', authToken],
-    () => TodoAPI.getTodos(authToken),
+    ['todos'],
+    TodoAPI.getTodos,
     {
       onError: (error) => {
         console.log(error);
@@ -40,7 +40,7 @@ const Todo = () => {
 
   const MutationOption = {
     onSuccess: () => {
-      queryClient.invalidateQueries(['todos', authToken]);
+      queryClient.invalidateQueries(['todos']);
     },
     onError: () => {
       /* Toast 자리 */
@@ -50,7 +50,7 @@ const Todo = () => {
   const { mutateAsync: createMutate } = useMutation<
     { data: TodoProp },
     Error,
-    TodoMutateProp
+    Pick<TodoProp, 'title' | 'content'>
   >(TodoAPI.createTodo, MutationOption);
 
   const { mutateAsync: deleteMutate } = useMutation(
@@ -62,7 +62,7 @@ const Todo = () => {
     e.preventDefault();
 
     try {
-      await createMutate({ title, content, authToken });
+      await createMutate({ title, content });
     } catch (err) {
       /* Toast 자리 */
     }

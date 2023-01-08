@@ -4,22 +4,15 @@ import { useQueryClient, useMutation } from '@tanstack/react-query';
 import styled from 'styled-components';
 import { Title } from 'components/Title';
 import { Button } from 'components/Button';
-import { UserProp } from 'types/auth';
 import * as S from 'styles/theme';
 import { AuthAPI } from 'api/auth';
 
 const Register = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-
-  const [userValue, setUserValue] = useState<UserProp>({
-    email: '',
-    password: '',
-  });
-
   const [isValidate, setIsValidate] = useState(false);
-
-  const { email, password } = userValue;
+  const [userInput, setUserInput] = useState({ email: '', password: '' });
+  const { email, password } = userInput;
 
   const handleValidate = useCallback(() => {
     if (email.length < 1 || password.length < 8) return;
@@ -45,24 +38,22 @@ const Register = () => {
       const { name, value } = e.target;
 
       if (name === 'email') {
-        setUserValue({ ...userValue, email: value });
+        setUserInput({ ...userInput, email: value });
       } else {
-        setUserValue({ ...userValue, password: value });
+        setUserInput({ ...userInput, password: value });
       }
     },
-    [userValue]
+    [userInput]
   );
 
   const handleSubmit = useCallback(
     (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
 
-      queryClient.setQueryData(['REGISTER_USER'], userValue);
-
-      handleValidate();
+      queryClient.setQueryData(['REGISTER_USER'], userInput);
 
       if (isValidate) {
-        mutate(userValue, {
+        mutate(userInput, {
           onSuccess: () => {
             console.log('회원가입 정보 저장 성공!');
             navigate('/login');
@@ -75,7 +66,7 @@ const Register = () => {
 
       setIsValidate(false);
     },
-    [isValidate, mutate, navigate, queryClient, userValue, handleValidate]
+    [isValidate, mutate, navigate, queryClient, userInput]
   );
 
   return (
@@ -89,7 +80,7 @@ const Register = () => {
                 name='email'
                 type='email'
                 placeholder='이메일'
-                value={userValue.email}
+                value={email}
                 onChange={handleChange}
               />
               <Input
@@ -97,7 +88,7 @@ const Register = () => {
                 type='password'
                 placeholder='비밀번호'
                 min='8'
-                value={userValue.password}
+                value={password}
                 onChange={handleChange}
               />
             </InputWrap>
