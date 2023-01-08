@@ -1,6 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { TodoAPI, TodoMutationType, TodoProp } from 'api/todo';
-import { v4 as uuidv4 } from 'uuid';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
@@ -17,14 +16,6 @@ const Todo = () => {
   const titleRef = useRef<HTMLInputElement>(null);
   const contentRef = useRef<HTMLInputElement>(null);
 
-  // const queryClient = new QueryClient({
-  //   // defaultOptions: {
-  //   //   queries: {
-  //   //     staleTime: Infinity,
-  //   //   },
-  //   // },
-  // });
-
   useEffect(() => {
     const authToken = localStorage.getItem('authToken');
     setToken(authToken!);
@@ -34,6 +25,12 @@ const Todo = () => {
       navigate('/login');
     }
   }, [navigate, token]);
+
+  const handleLogout = () => {
+    alert('또 만나요!');
+    localStorage.removeItem('authToken');
+    navigate('/login');
+  };
 
   const { data: todoList } = useQuery<{ data: TodoProp[] }, Error>(
     ['todos', token],
@@ -47,25 +44,6 @@ const Todo = () => {
       },
     }
   );
-
-  const queryClient = useQueryClient();
-
-  const { data: createData, mutateAsync: createMutate } = useMutation<
-    { data: TodoProp },
-    Error,
-    TodoMutationType
-  >(TodoAPI.createTodo, {
-    onSuccess: ({ data }) => {
-      queryClient.invalidateQueries(['todos', token]);
-      console.log(createData);
-    },
-  });
-
-  const handleLogout = () => {
-    alert('또 만나요!');
-    localStorage.removeItem('authToken');
-    navigate('/login');
-  };
 
   const handleAddTodo = () => {
     setIsShow(!isShow);
@@ -82,6 +60,18 @@ const Todo = () => {
       setAddTodo({ ...addTodo, content: value });
     }
   };
+
+  const queryClient = useQueryClient();
+
+  const { mutateAsync: createMutate } = useMutation<
+    { data: TodoProp },
+    Error,
+    TodoMutationType
+  >(TodoAPI.createTodo, {
+    onSuccess: () => {
+      queryClient.invalidateQueries(['todos', token]);
+    },
+  });
 
   const handleAddTodoSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -105,18 +95,22 @@ const Todo = () => {
       title: '',
       content: '',
     });
+
     setIsShow(false);
   };
 
-  const { mutate: deleteMutate } = useMutation(TodoAPI.deleteTodo);
+  const { mutateAsync: deleteMutate } = useMutation(TodoAPI.deleteTodo, {
+    onSuccess: () => {
+      queryClient.invalidateQueries(['todos', token]);
+    },
+  });
 
-  const handleTodoDelete = (id: string) => {
-    deleteMutate(id, {
-      onSuccess: (data) => {
-        console.log('삭제 성공');
-        console.log(data);
-      },
-    });
+  const handleTodoDelete = async (id: string) => {
+    try {
+      await deleteMutate(id);
+    } catch (err) {
+      console.log(err);
+    }
   };
 
   return (
@@ -146,15 +140,13 @@ const Todo = () => {
           />
           <AddTodoButton>추가</AddTodoButton>
         </AddTodoInputGroup>
-        {todoList ? (
+        {todoList?.data.length! > 0 ? (
           todoList?.data.map(
             ({
               id,
               title,
               content,
-              createdAt,
-            }: Pick<TodoProp, 'id' | 'title' | 'content' | 'createdAt'>) => (
-              // id
+            }: Pick<TodoProp, 'id' | 'title' | 'content'>) => (
               <FlexCustom key={id}>
                 <TodoItem>
                   <FlexColumn>
