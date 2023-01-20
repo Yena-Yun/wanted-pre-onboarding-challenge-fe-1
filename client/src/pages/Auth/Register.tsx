@@ -55,7 +55,8 @@ const Register = () => {
       if (isValidate) {
         mutate(userInput, {
           onSuccess: () => {
-            console.log('회원가입 정보 저장 성공!');
+            console.log('회원가입 성공!');
+            /* Toast 자리 */
             navigate('/login');
           },
           onError: (error) => {
@@ -116,7 +117,7 @@ const FormDiv = styled.form`
   max-width: 360px;
   min-height: 280px;
   padding: 24px 20px;
-  gap: 32px;
+  gap: 30px;
 `;
 
 const InputWrap = styled.div`
@@ -139,6 +140,6 @@ const Input = styled.input`
   background-color: rgb(255, 255, 255);
   color: rgba(0, 0, 0, 0.7);
   box-sizing: border-box;
-  cursor: text;
   transition: all 0.1s ease 0s;
+  cursor: text;
 `;

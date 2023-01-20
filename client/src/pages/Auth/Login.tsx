@@ -60,7 +60,7 @@ const Login = () => {
         mutate(userInput, {
           onSuccess: () => {
             console.log('로그인 성공!');
-            navigate('/');
+            navigate('/todo');
           },
           onError: (error) => {
             console.log(error);
@@ -99,7 +99,7 @@ const Login = () => {
             <Button isValidate={isValidate}>로그인</Button>
           </FormDiv>
           <S.FlexColumnCustom>
-            <p>아직 회원이 아니신가요?</p>
+            <Guide>아직 회원이 아니신가요?</Guide>
             <Link to='/register'>회원가입</Link>
           </S.FlexColumnCustom>
         </S.FlexColumn>
@@ -122,8 +122,8 @@ const FormDiv = styled.form`
   align-items: center;
   min-width: 300px;
   max-width: 360px;
-  padding: 20px 24px 0;
-  gap: 32px;
+  padding: 20px 24px 20px;
+  gap: 30px;
 `;
 
 const InputWrap = styled.div`
@@ -146,6 +146,11 @@ const Input = styled.input`
   background-color: rgb(255, 255, 255);
   color: rgba(0, 0, 0, 0.7);
   box-sizing: border-box;
-  cursor: text;
   transition: all 0.1s ease 0s;
+  cursor: text;
+`;
+
+const Guide = styled.p`
+  font-size: 14px;
+  margin-bottom: 16px;
 `;
