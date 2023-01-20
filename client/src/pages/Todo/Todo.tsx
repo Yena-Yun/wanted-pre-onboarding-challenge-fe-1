@@ -9,14 +9,17 @@ import { Modal } from 'components/Modal';
 import { Input } from 'components/Todo/Input';
 import { TodoProp } from 'types/todo';
 import * as S from 'styles/theme';
+import { todoStore } from 'mobx/store/todoStore';
 
 const Todo = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { modalStore, inputStore } = indexStore();
+  const { modalStore, inputStore, idStore } = indexStore();
 
-  const openModal = () => {
+  const openModal = (id: string, title: string, content: string) => {
     modalStore.openModal();
+    idStore.setId(id);
+    todoStore.setTodo({ title, content });
   };
 
   const { mutateAsync: deleteMutate } = useMutation(TodoAPI.deleteTodo, {
@@ -78,7 +81,7 @@ const Todo = () => {
                   content,
                 }: Pick<TodoProp, 'id' | 'title' | 'content'>) => (
                   <S.FlexCustom key={id}>
-                    <TodoItem onClick={openModal}>
+                    <TodoItem onClick={() => openModal(id, title, content)}>
                       <S.FlexColumn>
                         <S.FlexCustom justify='space-between'>
                           <Title>{title}</Title>

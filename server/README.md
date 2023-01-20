@@ -66,7 +66,7 @@
 
 - [getTodos](#getTodos)
 - [getTodoById](#getTodoById)
-- [createTodo](#createTodo)
+- [setTodo](#setTodo)
 - [updateTodo](#updateTodo)
 - [deleteTodo](#deleteTodo)
 
@@ -130,7 +130,7 @@
 }
 ```
 
-## createTodo
+## setTodo
 
 ### URL
 

@@ -5,12 +5,10 @@ import styled from 'styled-components';
 import inputStore from 'mobx/store/inputStore';
 import { useObserver } from 'mobx-react';
 import { TodoAPI } from 'api/service/todo';
-
-const DefaultAddProp = { title: '', content: '' };
+import indexStore from 'mobx/indexStore';
 
 export const Input = () => {
-  const [addTodo, setAddTodo] = useState(DefaultAddProp);
-  const { title, content } = addTodo;
+  const { todoStore } = indexStore();
   const titleRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
 
@@ -32,23 +30,23 @@ export const Input = () => {
   ) => {
     const { name, value } = e.target;
 
-    if (name === 'title') setAddTodo({ ...addTodo, title: value });
-    else setAddTodo({ ...addTodo, content: value });
+    if (name === 'title')
+      todoStore.setTodo({ ...todoStore.todo, title: value });
+    else todoStore.setTodo({ ...todoStore.todo, content: value });
   };
 
   const handleTodoSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (!title || !content) {
+    if (!todoStore.todo.title || !todoStore.todo.content) {
       /* Toast 자리 */
     }
 
     try {
-      await createMutate({ title, content });
+      await createMutate(todoStore.todo);
     } catch (err) {
       /* Toast 자리 */
     } finally {
-      setAddTodo(DefaultAddProp);
       inputStore.closeInput();
     }
   };
@@ -75,13 +73,13 @@ export const Input = () => {
             <AddInput
               ref={titleRef}
               name='title'
-              value={title}
+              value={todoStore.todo.title}
               placeholder='할 일 제목'
               onChange={handleAddInputChange}
             />
             <AddInput
               name='content'
-              value={content}
+              value={todoStore.todo.content}
               placeholder='할 일 내용'
               onChange={handleAddInputChange}
             />

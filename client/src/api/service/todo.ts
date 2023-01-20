@@ -1,5 +1,9 @@
 import { authToken, serverAxios } from 'api';
+import indexStore from 'mobx/indexStore';
+
 import { TodoProp } from 'types/todo';
+
+const { modalStore, inputStore, todoStore, idStore } = indexStore();
 
 export const TodoAPI = {
   getTodos: async () => {
@@ -20,24 +24,17 @@ export const TodoAPI = {
 
     return data.data;
   },
-  createTodo: async ({
-    title,
-    content,
-  }: Pick<TodoProp, 'title' | 'content'>) => {
-    const { data } = await serverAxios.post(
-      '/todos',
-      { title, content },
-      {
-        headers: {
-          Authorization: `Bearer ${authToken}`,
-        },
-      }
-    );
+  createTodo: async (todo: Pick<TodoProp, 'title' | 'content'>) => {
+    const { data } = await serverAxios.post('/todos', todo, {
+      headers: {
+        Authorization: `Bearer ${authToken}`,
+      },
+    });
 
     return data;
   },
-  updateTodo: async (todo: TodoProp, id: string): Promise<TodoProp> => {
-    const { data } = await serverAxios.put(`/todos/${id}`, todo, {
+  updateTodo: async (todo: Pick<TodoProp, 'title' | 'content'>) => {
+    const { data } = await serverAxios.put(`/todos/${idStore.id}`, todo, {
       headers: {
         Authorization: `Bearer ${authToken}`,
       },
