@@ -4,7 +4,7 @@ import { useQueryClient, useMutation } from '@tanstack/react-query';
 import styled from 'styled-components';
 import { Title } from 'components/Title';
 import { Button } from 'components/Button';
-import { AuthAPI } from 'api/auth';
+import { AuthAPI } from 'api/service/auth';
 import * as S from 'styles/theme';
 
 const Login = () => {
@@ -12,6 +12,7 @@ const Login = () => {
   const queryClient = useQueryClient();
   const [isValidate, setIsValidate] = useState(false);
   const [userInput, setUserInput] = useState({ email: '', password: '' });
+
   const { email, password } = userInput;
 
   const handleValidate = useCallback(() => {

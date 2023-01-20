@@ -19,13 +19,3 @@ export const AuthAPI = {
     return data;
   },
 };
-
-// export const AuthAPI = (endPointName: string) => {
-//   return async ({ email, password }: UserProp): Promise<AuthProp> => {
-//     const { data } = await serverAxios.post(`/users/${endPointName}`, {
-//       email,
-//       password,
-//     });
-//     return data;
-//   };
-// };

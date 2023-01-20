@@ -4,8 +4,8 @@ import { useQueryClient, useMutation } from '@tanstack/react-query';
 import styled from 'styled-components';
 import { Title } from 'components/Title';
 import { Button } from 'components/Button';
+import { AuthAPI } from 'api/service/auth';
 import * as S from 'styles/theme';
-import { AuthAPI } from 'api/auth';
 
 const Register = () => {
   const navigate = useNavigate();
