@@ -1,94 +1,88 @@
-import { useCallback, useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useQueryClient, useMutation } from '@tanstack/react-query';
-import styled from 'styled-components';
-import { Title } from 'components/Title';
-import { Button } from 'components/Button';
-import * as S from 'styles/theme';
-import { AuthAPI } from 'api/auth';
+import { useCallback, useEffect, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { useQueryClient, useMutation } from '@tanstack/react-query'
+import styled from 'styled-components'
+import { Title } from 'components/Title'
+import { Button } from 'components/Button'
+import * as S from 'styles/theme'
+import { AuthAPI } from 'api/auth'
 
 const Login = () => {
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
-  const [isValidate, setIsValidate] = useState(false);
-  const [userInput, setUserInput] = useState({ email: '', password: '' });
-  const { email, password } = userInput;
+  const navigate = useNavigate()
+  const queryClient = useQueryClient()
+  const [isValidate, setIsValidate] = useState(false)
+  const [userInput, setUserInput] = useState({ email: '', password: '' })
+  const { email, password } = userInput
 
   const handleValidate = useCallback(() => {
-    if (email.length < 1 || password.length < 8) return;
-    if (!email.includes('@') || !email.includes('.')) return;
-    setIsValidate(true);
-  }, [email, password.length]);
+    if (email.length < 5 || password.length < 8) return
+    if (!email.includes('@') || !email.includes('.')) return
+    setIsValidate(true)
+  }, [email, password.length])
 
   useEffect(() => {
-    handleValidate();
-  }, [handleValidate]);
+    handleValidate()
+  }, [handleValidate])
 
   const { mutate } = useMutation(AuthAPI.login, {
-    onSuccess: (data) => {
-      localStorage.setItem('authToken', JSON.stringify(data.token));
-      navigate('/');
+    onSuccess: data => {
+      localStorage.setItem('authToken', JSON.stringify(data.token))
+      navigate('/')
     },
-    onError: (error) => {
-      console.log(error);
+    onError: error => {
+      console.log(error)
     },
-  });
+  })
 
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      const { name, value } = e.target;
+      const { name, value } = e.target
 
       if (name === 'email') {
-        setUserInput({ ...userInput, email: value });
+        setUserInput({ ...userInput, email: value })
       } else {
-        setUserInput({ ...userInput, password: value });
+        setUserInput({ ...userInput, password: value })
       }
     },
-    [userInput]
-  );
+    [userInput],
+  )
 
   const handleSubmit = useCallback(
     (e: React.FormEvent<HTMLFormElement>) => {
-      e.preventDefault();
+      e.preventDefault()
 
-      queryClient.setQueryData(['LOGIN_USER'], userInput);
+      queryClient.setQueryData(['LOGIN_USER'], userInput)
 
       if (isValidate) {
         mutate(userInput, {
           onSuccess: () => {
-            console.log('로그인 성공!');
-            navigate('/');
+            console.log('로그인 성공!')
+            navigate('/')
           },
-          onError: (error) => {
-            console.log(error);
+          onError: error => {
+            console.log(error)
           },
-        });
+        })
       }
 
-      setIsValidate(false);
+      setIsValidate(false)
     },
-    [isValidate, mutate, navigate, queryClient, userInput]
-  );
+    [isValidate, mutate, navigate, queryClient, userInput],
+  )
 
   return (
     <Container>
-      <S.SizeBox width='80%'>
-        <S.FlexColumn gap='32px'>
+      <S.SizeBox width="80%">
+        <S.FlexColumn gap="32px">
           <FormDiv onSubmit={handleSubmit}>
-            <Title title='로그인'></Title>
+            <Title title="로그인"></Title>
             <InputWrap>
+              <Input name="email" type="email" placeholder="이메일" value={email} onChange={handleChange} />
               <Input
-                name='email'
-                type='email'
-                placeholder='이메일'
-                value={email}
-                onChange={handleChange}
-              />
-              <Input
-                name='password'
-                type='password'
-                placeholder='비밀번호'
-                min='8'
+                name="password"
+                type="password"
+                placeholder="비밀번호"
+                min="8"
                 value={password}
                 onChange={handleChange}
               />
@@ -97,20 +91,20 @@ const Login = () => {
           </FormDiv>
           <S.FlexColumnCustom>
             <p>아직 회원이 아니신가요?</p>
-            <Link to='/register'>회원가입</Link>
+            <Link to="/register">회원가입</Link>
           </S.FlexColumnCustom>
         </S.FlexColumn>
       </S.SizeBox>
     </Container>
-  );
-};
+  )
+}
 
-export default Login;
+export default Login
 
 const Container = styled(S.FlexCustom)`
   width: 100%;
   margin-top: 64px;
-`;
+`
 
 const FormDiv = styled.form`
   display: flex;
@@ -121,7 +115,7 @@ const FormDiv = styled.form`
   max-width: 360px;
   padding: 20px 24px 0;
   gap: 32px;
-`;
+`
 
 const InputWrap = styled.div`
   display: flex;
@@ -130,7 +124,7 @@ const InputWrap = styled.div`
   align-items: center;
   width: 100%;
   gap: 4px;
-`;
+`
 
 const Input = styled.input`
   flex: 1 1 0%;
@@ -145,4 +139,4 @@ const Input = styled.input`
   box-sizing: border-box;
   cursor: text;
   transition: all 0.1s ease 0s;
-`;
+`

@@ -1,14 +1,17 @@
+@import url('//db.onlinewebfonts.com/c/70710ba3196618b630b4a1e532809b1d?family=AppleSDGothicNeoB00&family=AppleSDGothicNeoM00');
+
 * {
   box-sizing: border-box;
 }
 
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family: AppleSDGothicNeoB00, AppleSDGothicNeoM, Pretendard, -apple-system,
+    BlinkMacSystemFont, Segoe UI, Roboto, Oxygen, Ubuntu, Cantarell, Fira Sans,
+    Droid Sans, Helvetica Neue, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  font-weight: 400;
 }
 
 h1,
@@ -16,7 +19,8 @@ h2,
 h3,
 h4,
 h5,
-h6 {
+h6,
+p {
   margin: 0;
 }
 
@@ -32,7 +36,16 @@ button {
   border: none;
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+@font-face {
+  font-family: 'AppleSDGothicNeoB00';
+  src: url('//db.onlinewebfonts.com/t/70710ba3196618b630b4a1e532809b1d.woff2')
+      format('woff2'),
+    url('//db.onlinewebfonts.com/t/70710ba3196618b630b4a1e532809b1d.woff')
+      format('woff');
+}
+
+@font-face {
+  font-family: 'AppleSDGothicNeoM';
+  font-weight: 400;
+  src: url('./styles/font/AppleSDGothicNeoM.otf');
 }

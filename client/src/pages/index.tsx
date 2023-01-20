@@ -61,6 +61,10 @@ const Todo = () => {
   const handleTodoSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
+    if (!title || !content) {
+      /* Toast 자리 */
+    }
+
     try {
       await createMutate({ title, content });
     } catch (err) {
@@ -92,9 +96,11 @@ const Todo = () => {
 
   return (
     <>
-      <h1>Todo 앱</h1>
+      <TodoTitle>Todo 앱</TodoTitle>
       {todoList || authToken ? (
-        <LogoutButton onClick={logout}>로그아웃</LogoutButton>
+        <LogoutButton onClick={logout}>
+          <span>로그아웃</span>
+        </LogoutButton>
       ) : (
         <Link to='/login'>로그인</Link>
       )}
@@ -160,9 +166,15 @@ const Container = styled.div`
   border-radius: 14px;
 `;
 
+const TodoTitle = styled.h1`
+  font-family: AppleSDGothicNeoB00;
+  font-weight: 700;
+`;
+
 const AddTodoButton = styled.button`
-  padding: 8px 14px;
   margin-bottom: 16px;
+  padding: 8px 14px;
+  font-family: AppleSDGothicNeoM;
   border: 1px solid green;
   border-radius: 10px;
   cursor: pointer;
@@ -178,8 +190,8 @@ const AddInput = styled.input`
   position: relative;
   flex: 1 1 0%;
   width: 100%;
-  padding: 12px 20px;
   margin-bottom: 12px;
+  padding: 12px 20px;
   color: rgba(0, 0, 0, 0.7);
   border-radius: 12px;
   background-color: rgb(255, 255, 255);
@@ -204,18 +216,21 @@ const TodoDeleteButton = styled.button`
   cursor: pointer;
 `;
 
-const Title = styled.div`
+const Title = styled.p`
   margin-bottom: 5px;
+  font-family: AppleSDGothicNeoM;
   font-weight: 500;
 `;
 
-const Description = styled.div`
+const Description = styled.p`
   margin-bottom: 11px;
+  font-family: AppleSDGothicNeoM;
   font-size: 14px;
   color: rgba(0, 0, 0, 0.8);
 `;
 
 const LogoutButton = styled.button`
+  font-family: AppleSDGothicNeoM;
   cursor: pointer;
 `;
 
